@@ -1,0 +1,17 @@
+1. First, collect several solenoid that has potential of forming rigid structure and bury charged residue inside. I will start with 3ult
+
+2. Manually mutate the residues inside protein to harbor charged residue H D H D.
+
+3. MPNN to sample sequences, create sequence weblog.
+
+4. Filter the sequence use CD-hit, select by both diversity (cluster) and conservation (the sequence from each cluster)
+
+5. Use chai to predict the structure of protein. 100 proteins in total
+
+(3. RFdiffusion to partial diffuse the rest of the structure.)
+
+4. Pyrosetta to repack the N and C terminus to V
+
+5. RFdiffusion to generate capping structure
+
+6. Motif with the bury charge unchanged
