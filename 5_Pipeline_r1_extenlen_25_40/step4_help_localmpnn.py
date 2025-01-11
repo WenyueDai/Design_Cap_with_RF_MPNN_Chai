@@ -5,6 +5,8 @@ import json
 """This is solublempnn to find the sequence for both capping, and the 14AA extended from the capping sequence
 """
 
+#conda activate mlfold
+
 # Input and output directories
 folder_with_pdbs = "/home/eva/0_bury_charged_pair/5_Pipeline/20241101_rfdiffusion_m7/1_cap_calculation/N_cap_add_3ultback"
 output_dir = "/home/eva/0_bury_charged_pair/5_Pipeline/20241101_rfdiffusion_m7/1_cap_calculation/N_cap_add_3ultback/mpnn"

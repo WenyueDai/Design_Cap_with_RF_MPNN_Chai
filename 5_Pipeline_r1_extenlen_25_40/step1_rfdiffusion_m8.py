@@ -104,12 +104,6 @@ def get_scaffoldguided(row):
     torch.save(tensor_pattern, f'{scaffold_local_dir}/{row["index_str"]}_ss.pt')
     torch.save(block_adj, f'{scaffold_local_dir}/{row["index_str"]}_adj.pt')
 
-
-    scaffold_local_dir = row['scaffold_dir'].replace(REMOTE_DIR, LOCAL_FILE_PATH)
-    Path(scaffold_local_dir).mkdir(parents=True, exist_ok=True)
-    torch.save(tensor_pattern, f'{scaffold_local_dir}/{row["index_str"]}_ss.pt')
-    torch.save(block_adj, f'{scaffold_local_dir}/{row["index_str"]}_adj.pt')
-
 def write_task(row):
     command = ("/home/wd304/.conda/envs/SE3nv-cuda116/bin/python "
                "/rds/user/wd304/hpc-work/RFdiffusion/scripts/run_inference.py "

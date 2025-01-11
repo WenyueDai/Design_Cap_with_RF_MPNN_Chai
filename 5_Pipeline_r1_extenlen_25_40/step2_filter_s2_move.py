@@ -15,7 +15,7 @@ It output either Ncap-mainbody or Ccap-mainbody
 As long as the RMSD, angle and distance histogram and 2D plot was generated from last script.
 It is still not very clear what is the 'good cap limitation' for all three parameters.
 What I do is to first slice based on angle (0,5) (5, 10), (10, 15), (15, 20), (20, 25) and then run the script
-to seperate out the pdb based on the sliced. Then I manually look at the pdb structure filtered out in each slices.
+to seperate out the pdb based on the sliced. Then I manually look at the pdb structure filtered out in each slices by selecting 10 pdb into pse ramdomly.
 Ater find out the good range, use it to slice distance (18, 22), (22, 23), (23, 24), (24, 25), (25>)
 Then find out the good range, use both parameter to slice rmsd (5, 8), (8, 9), (9,10), (10, 11), (11,15)
 After applying the narrowed range, I in total filter out around 200 pdb structure for each N cap and C cap for m7 and m8
@@ -25,6 +25,7 @@ After applying the narrowed range, I in total filter out around 200 pdb structur
 def filter_pdb_files(parameter_file, n_rmsd_range, n_distance_range, n_angle_range,
                      c_rmsd_range, c_distance_range, c_angle_range, output_folder):
     # Load the parameter file into a DataFrame
+    # The parameter file was generated from filter_s1 script, with PDB_File	N_Cap_RMSD	N_Cap_Distance	N_Cap_Angle	C_Cap_RMSD	C_Cap_Distance	C_Cap_Angle
     df = pd.read_csv(parameter_file, sep='\t')
     
     # Create subfolders for N cap and C cap within the output folder
