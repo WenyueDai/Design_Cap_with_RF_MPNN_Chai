@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./5_Pipeline_r1_extenlen_25_40/step0_"
+    ]
+}

@@ -1,25 +1,39 @@
-import os, ast
-import numpy as np
-import glob
-import scipy.spatial
-import pandas as pd
-import csv
-import itertools
-
-from pathlib import Path
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-import multiprocessing as mp
-import Bio
-#import pymol.cmd as cmd
-import pyrosetta
+import pyrosetta # type: ignore
+from pymol import cmd # type: ignore
 pyrosetta.init("--ex1 --ex2")
 
-"""In this script I convert the 3ult with a combination of 10*V + 94*E + 10*V, this will provide 
-a starting pdb structure for RFdiffusion, which is biased by the identity of amino acids.
+"""This script perform the following steps:
+1. Clean up 3ult.pdb and keep only chain A.
+2. Repack 3ult.pdb with a combination of 10*V + 94*E + 10*V as a starting structure for RFdiffusion. 
 """
+
+#conda activate getcontact
+
+def clean_and_renumber_pdb(input_file, output_file, chains_to_keep="A"):
+    """
+    Cleans and renumbers a PDB file:
+    - Removes water and common ions (NA, CL, MG, CA, ZN).
+    - Keeps only atoms with alternate locations 'A' or ' '.
+    - Filters to keep only specified chain(s), default is chain A.
+    - Renumbers residues and atoms sequentially
+    """
+    cmd.load(input_file, "protein")
+    cmd.remove("resn HOH or resn NA+CL+MG+CA+ZN or hetatm")
+    cmd.remove("not alt ''+A")
+    if chains_to_keep:
+        cmd.remove(f"not chain {chains_to_keep}")
+
+    # Renumber residues to start from 1
+    starting_residue = int(cmd.get_model("all").atom[0].resi)  # Find the starting residue number
+    cmd.alter("all", f"resi=str(int(resi) - {starting_residue - 1})")  # Adjust residues to start from 1
+
+    # Renumber atoms sequentially starting from 1
+    atom_counter = 1
+    cmd.alter("all", "serial=atom_counter; atom_counter+=1", space={'atom_counter': atom_counter})
+    cmd.sort()
+    cmd.save(output_file, "protein")
+    cmd.delete("all")
+    return "PDB clean up finished"
 
 def parse_pdb_sequence(file_path, chain_id='A'):
     three_to_one = {
@@ -29,16 +43,14 @@ def parse_pdb_sequence(file_path, chain_id='A'):
         'SER': 'S', 'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'
     }
 
-    sequence = []
- 
+    sequence = {}
     with open(file_path, 'r') as file:
         for line in file:
-            if line.startswith(('ATOM', 'HETATM')) and line[21].strip() == chain_id:
+            if line.startswith(('ATOM')) and line[21].strip() == chain_id:
                 res_name = line[17:20].strip()
                 if res_name in three_to_one:
-                    sequence.append(three_to_one[res_name])
-                    
-    return ''.join(sequence)
+                    sequence[line[22:27].strip()] = three_to_one[res_name]   
+    return "".join(sequence.values())
 
 #Sequence of chain A: PNTISGSNTVRSGSKNVLAGNDNTVISGDNSVSGSNTVSGNDNTVTGSNHVSGTNHIVTDNVSGNDNVSGSFHTVSGHNTVSGSNTVSGSNHVSGSNKVTD
 # Provide the path to your PDB file
@@ -96,10 +108,11 @@ def modify_protein_sequence(input_pdb: str, output_pdb: str, input_sequence: str
     # Dump the modified pose to the defined file
     pose.dump_pdb(output_pdb)
 
-
 # Example usage
+start_pdb = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/input_pdb/3ult.pdb"
 dammy_seq = 'EVE'*1 + "V"*9 + 'E'*90 + 'V'*8 + 'EVEE'*1
-input_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline/input_pdb/3ult_cleaned_renumbered_monomer.pdb'
-output_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline/input_pdb/3ult_cleaned_renumbered_monomer_VE.pdb'
+input_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/input_pdb/3ult_cleaned_renumbered_monomer.pdb'
+output_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/input_pdb/3ult_cleaned_renumbered_monomer_VE.pdb'
 input_sequence = dammy_seq  # Replace with the actual input sequence
+clean_and_renumber_pdb(start_pdb, input_pdb, chains_to_keep="A")
 modify_protein_sequence(input_pdb, output_pdb, input_sequence)

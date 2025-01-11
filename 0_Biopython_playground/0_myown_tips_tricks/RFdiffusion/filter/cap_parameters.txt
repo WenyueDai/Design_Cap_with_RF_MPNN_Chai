@@ -1,0 +1,10 @@
+PDB_File	N_Cap_RMSD	N_Cap_Distance	N_Cap_Angle	C_Cap_RMSD	C_Cap_Distance	C_Cap_Angle
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_025_cycle_01_0.pdb	8.025	20.118	23.68	6.749	25.517	19.02
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_029_cycle_02_4.pdb	9.287	21.555	27.11	9.531	24.526	14.69
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_030_cycle_03_6.pdb	6.956	22.207	7.59	8.356	24.215	6.19
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_031_cycle_01_0.pdb	9.928	22.322	20.87	9.475	24.084	18.40
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_032_cycle_02_6.pdb	9.492	21.922	24.57	10.473	24.456	4.40
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_028_cycle_02_5.pdb	8.821	21.487	18.19	9.041	23.560	1.81
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_033_cycle_01_3.pdb	8.658	24.667	4.40	9.187	24.392	7.44
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_026_cycle_05_6.pdb	9.307	20.986	30.52	6.857	24.763	16.58
+/home/eva/0_bury_charged_pair/0_Biopython_playground/0_myown_tips_tricks/RFdiffusion/pdb/3ult_cropNT_001_cropCT_114_extendlen_027_cycle_01_5.pdb	8.813	24.238	11.50	6.666	23.857	6.56
