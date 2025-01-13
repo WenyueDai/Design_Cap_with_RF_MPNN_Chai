@@ -16,17 +16,17 @@ plt.rcParams.update({'font.size': 32})
 cap_type = "C cap"  # Choose either "N cap" or "C cap"
 LEEWAY = 14
 # N cap: MIN_INTERFACE_BSA = 100  # Minimum Interface BSA to filter caps
-MIN_INTERFACE_BSA = 0 
+MIN_INTERFACE_BSA = 100 
 # N cap: MIN_HELIX = 80 # Minimum helix percentage
-MIN_HELIX = 50
+MIN_HELIX = 40
 
 # N cap: MIN_HBONDS = 5  # Minimum number of hydrogen bonds to keep the file
-MIN_HBONDS = 1
+MIN_HBONDS = 4
 # N cap: MIN_CLOSE_ATOMS = 150 # Minimum number of atom in close approxite to cap
-MIN_CLOSE_ATOMS = 50
+MIN_CLOSE_ATOMS = 100
 
 # N cap: MIN_HYDROPHOBIC_CONTACTS = 10  # Threshold for hydrophobic contacts
-MIN_HYDROPHOBIC_CONTACTS = 1
+MIN_HYDROPHOBIC_CONTACTS = 8
 
 DISTANCE_CUTOFF = 3.5  # Distance cutoff for hydrogen bonds in Å
 ANGLE_CUTOFF = 135.0  # Angle cutoff for hydrogen bonds in degrees
@@ -89,18 +89,36 @@ def add_hydrogens(pdb_path):
             new_pdb_path_list.append(new_pdb_path)
     return new_pdb_path_list
 
+def parse_pdb_sequence(pdb_path, chain_id='A'):
+    three_to_one = {
+        'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D', 'CYS': 'C',
+        'GLN': 'Q', 'GLU': 'E', 'GLY': 'G', 'HIS': 'H', 'ILE': 'I',
+        'LEU': 'L', 'LYS': 'K', 'MET': 'M', 'PHE': 'F', 'PRO': 'P',
+        'SER': 'S', 'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'
+    }
+
+    sequence = {}
+    with open(pdb_path, 'r') as file:
+        for line in file:
+            if line.startswith(('ATOM')) and line[21].strip() == chain_id:
+                res_name = line[17:20].strip()
+                if res_name in three_to_one:
+                    sequence[line[22:27].strip()] = three_to_one[res_name]   
+    sequence_string = "".join(sequence.values())
+    return len(sequence_string)
+
 # 5. Function to calculate hydrogen bonds with cpptraj, including backbone-only calculation
 def calculate_hbonds_with_cpptraj(pdb_path):
     filename = os.path.basename(pdb_path)
     extend_number = get_extend_number_from_filename(filename)
-
+    full_length = parse_pdb_sequence(pdb_path, chain_id='A')
     # Define cap and leeway regions based on cap type
     if cap_type == "N cap":
         cap_residues = f"1-{extend_number}"
         leeway_residues = f"{extend_number + 1}-{extend_number + LEEWAY}"
     elif cap_type == "C cap":
-        cap_residues = f"{extend_number + 1}-last"
-        leeway_residues = f"{extend_number - LEEWAY + 1}-{extend_number}"
+        cap_residues = f"{full_length - extend_number + 1}-{full_length}"
+        leeway_residues = f"{full_length - extend_number - LEEWAY + 1}-{full_length - extend_number}"
     else:
         print("Cap type not defined. Skipping hydrogen bond analysis.")
         return 0, 0, 0
@@ -163,7 +181,8 @@ def calculate_hbonds_with_cpptraj(pdb_path):
 def calculate_interface_bsa(pdb_path):
     filename = os.path.basename(pdb_path)
     extend_number = get_extend_number_from_filename(filename)
-
+    full_length = parse_pdb_sequence(pdb_path, chain_id='A')
+    
     try:
         with pymol2.PyMOL() as pymol:
             pymol.cmd.load(pdb_path, "structure")
@@ -174,9 +193,9 @@ def calculate_interface_bsa(pdb_path):
                 body_start = extend_number + 1
                 body_residues = f"{body_start}-{body_start + extend_number - 1}"
             elif cap_type == "C cap":
-                cap_residues = f"{extend_number + 1}-last"
-                body_start = extend_number - (extend_number - 1)
-                body_residues = f"{body_start - extend_number + 1}-{body_start}"
+                cap_residues = f"{full_length - extend_number + 1}-{full_length}"
+                body_start = full_length - (2 * extend_number) + 1
+                body_residues = f"{body_start}-{body_start + extend_number - 1}"
             else:
                 print("Cap type not defined.")
                 return 0, 0, 0
@@ -212,14 +231,15 @@ def calculate_interface_bsa(pdb_path):
 def calculate_close_atoms_pymol(pdb_path):
     filename = os.path.basename(pdb_path)
     extend_number = get_extend_number_from_filename(filename)
-
+    full_length = parse_pdb_sequence(pdb_path, chain_id='A')
+    
     # Define cap and leeway regions based on cap type
     if cap_type == "N cap":
         cap_residues = f"1-{extend_number}"
         leeway_residues = f"{extend_number + 1}-{extend_number + LEEWAY}"
     elif cap_type == "C cap":
-        cap_residues = f"{extend_number + 1}-last"
-        leeway_residues = f"{extend_number - LEEWAY + 1}-{extend_number}"
+        cap_residues = f"{full_length - extend_number + 1}-{full_length}"
+        leeway_residues = f"{full_length - extend_number - LEEWAY + 1}-{full_length - extend_number}"
     else:
         print("Cap type not defined.")
         return 0
@@ -247,6 +267,7 @@ def calculate_helix(pdb_path):
     # Extract the filename and determine the extend number
     filename = os.path.basename(pdb_path)
     extend_number = get_extend_number_from_filename(filename)
+    full_length = parse_pdb_sequence(pdb_path, chain_id='A')
 
     if extend_number is None or extend_number <= 0:
         print("Invalid or missing extend number.")
@@ -260,7 +281,7 @@ def calculate_helix(pdb_path):
             if cap_type == "N cap":
                 cap_residues = f"1-{extend_number}"
             elif cap_type == "C cap":
-                cap_residues = f"{extend_number + 1}-last"
+                cap_residues = f"{full_length - extend_number + 1}-{full_length}"
             else:
                 print("Invalid cap type. Choose 'N cap' or 'C cap'.")
                 return 0
