@@ -15,12 +15,18 @@ plt.rcParams.update({'font.size': 32})
 # Configuration
 cap_type = "C cap"  # Choose either "N cap" or "C cap"
 LEEWAY = 14
-MIN_INTERFACE_BSA = 100  # Minimum Interface BSA to filter caps
-MIN_HELIX = 80 # Minimum helix percentage
+# N cap: MIN_INTERFACE_BSA = 100  # Minimum Interface BSA to filter caps
+MIN_INTERFACE_BSA = 0 
+# N cap: MIN_HELIX = 80 # Minimum helix percentage
+MIN_HELIX = 50
 
-MIN_HBONDS = 5  # Minimum number of hydrogen bonds to keep the file
-MIN_CLOSE_ATOMS = 150 # Minimum number of atom in close approxite to cap
-MIN_HYDROPHOBIC_CONTACTS = 10  # Threshold for hydrophobic contacts
+# N cap: MIN_HBONDS = 5  # Minimum number of hydrogen bonds to keep the file
+MIN_HBONDS = 1
+# N cap: MIN_CLOSE_ATOMS = 150 # Minimum number of atom in close approxite to cap
+MIN_CLOSE_ATOMS = 50
+
+# N cap: MIN_HYDROPHOBIC_CONTACTS = 10  # Threshold for hydrophobic contacts
+MIN_HYDROPHOBIC_CONTACTS = 1
 
 DISTANCE_CUTOFF = 3.5  # Distance cutoff for hydrogen bonds in Å
 ANGLE_CUTOFF = 135.0  # Angle cutoff for hydrogen bonds in degrees

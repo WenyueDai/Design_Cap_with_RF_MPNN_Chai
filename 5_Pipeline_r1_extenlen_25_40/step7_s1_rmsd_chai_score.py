@@ -9,14 +9,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# conda activate AmberTools23
+
 # Set global font size for plots
 plt.rcParams.update({'font.size': 32})
 
-cap_type = "N cap"  # Choose either "N cap" or "C cap"
+cap_type = "C cap"  # Choose either "N cap" or "C cap"
 
 # Define the paths
-chai_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step3_chai_m8/N_cap"
-rdfiffusion_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step1_rfdiffusion_m8/1_cap_calculation/N_cap_add_3ultback"
+chai_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step3_chai_m8/C_cap"
+rdfiffusion_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step1_rfdiffusion_m8/1_cap_calculation/C_cap_add_3ultback"
 analysis_folder = os.path.join(chai_folder, "analysis_localrmsd")
 rmsd_output_file = os.path.join(analysis_folder, "rmsd_results.txt")
 scatter_plot_file = os.path.join(analysis_folder, "rmsd_vs_chai_score.png")
@@ -209,8 +211,9 @@ plot_rmsd_vs_extendlen(rmsd_data, extend_lengths)
 # Sort and save RMSD and Chai score data
 if sorted_data:
     df_sorted = pd.DataFrame(sorted_data, columns=["extend_cycle_num_num", "sample_num", "file_name", "global_rmsd", "chai_score", "extend_length"])
-    df_sorted = df_sorted[(df_sorted['global_rmsd'] <= 6) & (df_sorted['chai_score'] >= 0.16)]
-
+    # for N cap: df_sorted = df_sorted[(df_sorted['global_rmsd'] <= 6) & (df_sorted['chai_score'] >= 0.16)]
+    # for C cap:
+    df_sorted = df_sorted[(df_sorted['global_rmsd'] <= 10) & (df_sorted['chai_score'] >= 0.16)]
     sorted_output_file = os.path.join(analysis_folder, "sorted_rmsd_chai_scores.txt")
     df_sorted.to_csv(sorted_output_file, index=False, sep='\t')
     print(f"Sorted RMSD and Chai score data saved to {sorted_output_file}.")
