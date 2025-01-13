@@ -19,6 +19,25 @@ the two elements.
 # Set default font size for all plots
 plt.rcParams.update({'font.size': 32})
 
+def parse_pdb_sequence(file_path, chain_id='A'):
+    three_to_one = {
+        'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D', 'CYS': 'C',
+        'GLN': 'Q', 'GLU': 'E', 'GLY': 'G', 'HIS': 'H', 'ILE': 'I',
+        'LEU': 'L', 'LYS': 'K', 'MET': 'M', 'PHE': 'F', 'PRO': 'P',
+        'SER': 'S', 'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'
+    }
+
+    sequence = {}
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith(('ATOM')) and line[21].strip() == chain_id:
+                res_name = line[17:20].strip()
+                if res_name in three_to_one:
+                    sequence[line[22:27].strip()] = three_to_one[res_name]   
+    sequence_string = "".join(sequence.values())
+    return len(sequence_string)
+
+
 # Function to determine glycine-based N cap and C cap lengths
 def determine_glycine_caps(sequence):
     n_cap_len, c_cap_len = 0, 0
