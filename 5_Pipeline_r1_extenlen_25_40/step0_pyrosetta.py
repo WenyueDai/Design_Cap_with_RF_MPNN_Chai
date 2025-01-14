@@ -2,24 +2,19 @@ import pyrosetta # type: ignore
 from pymol import cmd # type: ignore
 pyrosetta.init("--ex1 --ex2")
 
-"""This script perform the following steps:
-1. Clean up 3ult.pdb and keep only chain A.
-2. Repack 3ult.pdb with a combination of 10*V + 94*E + 10*V as a starting structure for RFdiffusion. 
+"""
+conda activate getcontact
+
+Functions in this script:
+clean_and_renumber_pdb: as name suggest, an option to keep only single chain and renumber pdb
+parse_pdb_sequence: extract protein sequence from pdb file
+modify_protein_sequence: pyrosetta to repack structure based on input dummy sequence
 """
 
-#conda activate getcontact
-
 def clean_and_renumber_pdb(input_file, output_file, chains_to_keep="A"):
-    """
-    Cleans and renumbers a PDB file:
-    - Removes water and common ions (NA, CL, MG, CA, ZN).
-    - Keeps only atoms with alternate locations 'A' or ' '.
-    - Filters to keep only specified chain(s), default is chain A.
-    - Renumbers residues and atoms sequentially
-    """
     cmd.load(input_file, "protein")
-    cmd.remove("resn HOH or resn NA+CL+MG+CA+ZN or hetatm")
-    cmd.remove("not alt ''+A")
+    cmd.remove("resn HOH or resn NA+CL+MG+CA+ZN or hetatm") 
+    cmd.remove("not alt ''+A") # keep onlz atoms with alternate location A
     if chains_to_keep:
         cmd.remove(f"not chain {chains_to_keep}")
 
@@ -50,14 +45,8 @@ def parse_pdb_sequence(file_path, chain_id='A'):
                 res_name = line[17:20].strip()
                 if res_name in three_to_one:
                     sequence[line[22:27].strip()] = three_to_one[res_name]   
-    return "".join(sequence.values())
-
-#Sequence of chain A: PNTISGSNTVRSGSKNVLAGNDNTVISGDNSVSGSNTVSGNDNTVTGSNHVSGTNHIVTDNVSGNDNVSGSFHTVSGHNTVSGSNTVSGSNHVSGSNKVTD
-# Provide the path to your PDB file
-pdb_file_path = '/home/eva/0_bury_charged_pair/2_No_initial_de_novo/2_rfdiffusion_cap/input/3ult_cleaned_renumbered_monomer.pdb'
-
-sequence = parse_pdb_sequence(pdb_file_path)
-print(f"Sequence of chain A: {sequence}")
+    sequence_string = "".join(sequence.values())
+    return sequence_string
 
 def one_letter_to_three(letter):
     one_to_three = {
@@ -69,12 +58,7 @@ def one_letter_to_three(letter):
     return one_to_three.get(letter)
 
 def modify_protein_sequence(input_pdb: str, output_pdb: str, input_sequence: str) -> None:
-    # Initialize PyRosetta
-    #pyrosetta.init("--ex1 --ex2")
-    
-    # Load the pose from the PDB file
     pose = pyrosetta.pose_from_file(input_pdb)
-    
     # Check if the input sequence length matches the total residues in the PDB file
     if len(input_sequence) != pose.total_residue():
         raise ValueError("Input sequence length does not match the number of residues in the PDB file.")
@@ -115,4 +99,5 @@ input_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/input_pd
 output_pdb = '/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/input_pdb/3ult_cleaned_renumbered_monomer_VE.pdb'
 input_sequence = dammy_seq  # Replace with the actual input sequence
 clean_and_renumber_pdb(start_pdb, input_pdb, chains_to_keep="A")
+print(f"Sequence of chain A: {parse_pdb_sequence(input_pdb)}")
 modify_protein_sequence(input_pdb, output_pdb, input_sequence)
