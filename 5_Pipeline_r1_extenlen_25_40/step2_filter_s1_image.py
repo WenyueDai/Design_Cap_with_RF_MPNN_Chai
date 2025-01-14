@@ -7,13 +7,13 @@ import warnings
 import Bio.PDB
 from scipy.stats import gaussian_kde
 
-"""After RFdiffusion, there are some unsatisfied cap that has little chance of being a good cap after MPNN.
-These cap include the ones that are far away from the main body, have a severe angle and has a too close RMSD 
-with the main body because that would make it more like an extension rather than a cap. I filter them out and 
-only keep the good one for MPNN.
-
-This script will generate images for histogram of distance, rmsd and angle. And generate the 2D plot for each of
-the two elements.
+"""
+conda activate getcontact
+Use after RFdiffusion.
+Filter cap based on criteria:
+- Distance: how far cap is away from main body
+- Angle: angle between cap and main body
+- RMSD: how similar between cap and main body
 """
 
 # Set default font size for all plots
@@ -35,10 +35,9 @@ def parse_pdb_sequence(file_path, chain_id='A'):
                 if res_name in three_to_one:
                     sequence[line[22:27].strip()] = three_to_one[res_name]   
     sequence_string = "".join(sequence.values())
-    return len(sequence_string)
+    return sequence_string
 
-
-# Function to determine glycine-based N cap and C cap lengths
+# Function to determine glycine-based N cap and C cap lengths (RFdiffusion generate all G)
 def determine_glycine_caps(sequence):
     n_cap_len, c_cap_len = 0, 0
     for i, res in enumerate(sequence):
@@ -53,11 +52,17 @@ def determine_glycine_caps(sequence):
             break
     return n_cap_len, c_cap_len
 
+# Distance and angle calculations
+def calculate_angle(point_a, point_b, point_c):
+    vec_a = point_a - point_b
+    vec_c = point_c - point_b
+    cosine_angle = np.dot(vec_a, vec_c) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_c))
+    angle = np.degrees(np.arccos(np.clip(cosine_angle, -1.0, 1.0)))
+    return angle
+
 # Function to calculate RMSD, distance, and angle for N and C caps
 def calculate_cap_parameters(pdb_file):
-    structure = Bio.PDB.PDBParser(QUIET=True).get_structure('protein', pdb_file)
-    ppb = Bio.PDB.PPBuilder()
-    sequence = "".join(str(pp.get_sequence()) for pp in ppb.build_peptides(structure))
+    sequence = parse_pdb_sequence(pdb_file, chain_id='A')
     if not sequence:
         print(f"No valid sequence in {pdb_file}. Skipping.")
         return None
@@ -66,10 +71,8 @@ def calculate_cap_parameters(pdb_file):
     if n_cap_len == 0 or c_cap_len == 0:
         print(f"Skipping {pdb_file} due to insufficient N or C cap length.")
         return None
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)  # Suppress the dt warning in MDAnalysis
-        u = Universe(pdb_file)
+    
+    u = Universe(pdb_file)
 
     # N cap and C cap atoms
     n_cap = u.select_atoms(f"resid 1:{n_cap_len}")
@@ -85,14 +88,6 @@ def calculate_cap_parameters(pdb_file):
     rmsd_c_analysis = rms.RMSD(c_cap, main_body_c).run()
     rmsd_n = rmsd_n_analysis.results.rmsd[-1, 2]
     rmsd_c = rmsd_c_analysis.results.rmsd[-1, 2]
-
-    # Distance and angle calculations
-    def calculate_angle(point_a, point_b, point_c):
-        vec_a = point_a - point_b
-        vec_c = point_c - point_b
-        cosine_angle = np.dot(vec_a, vec_c) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_c))
-        angle = np.degrees(np.arccos(np.clip(cosine_angle, -1.0, 1.0)))
-        return angle
 
     n_cap_com = n_cap.center_of_mass()
     c_cap_com = c_cap.center_of_mass()
@@ -121,13 +116,6 @@ def save_parameters_to_file(results, output_file):
         for res in results:
             f.write(f"{res['pdb_file']}\t{res['n_cap_rmsd']:.3f}\t{res['n_cap_distance']:.3f}\t{res['n_cap_angle']:.2f}\t"
                     f"{res['c_cap_rmsd']:.3f}\t{res['c_cap_distance']:.3f}\t{res['c_cap_angle']:.2f}\n")
-
-# Predefined bin counts based on parameter range
-bin_settings = {
-    'RMSD': 18,      # Adjust based on data range (0–20) and manual (increase if frequency>100, decrease if too many bin)
-    'Distance': 15,  # Adjust based on data range (0–30) and manual
-    'Angle': 18      # Adjust based on data range (0–60) and manual
-}
 
 # Function to plot individual histograms for each parameter with preset bins
 def plot_individual_histograms(data, title_prefix, output_folder):
@@ -216,8 +204,14 @@ def calculate_caps_parameters(input_folder, output_folder, parameter_file):
     save_parameters_to_file(results, parameter_file)
 
 # Example usage
-input_folder = "/home/eva/0_bury_charged_pair/5_Pipeline/20241101_rfdiffusion_m8/output/pdb"
-output_folder = "/home/eva/0_bury_charged_pair/5_Pipeline/20241101_rfdiffusion_m8/1_cap_calculation"
+# Predefined bin counts based on parameter range
+bin_settings = {
+    'RMSD': 18,      # Adjust based on data range (0–20) and manual (increase if frequency>100, decrease if too many bin)
+    'Distance': 15,  # Adjust based on data range (0–30) and manual
+    'Angle': 18      # Adjust based on data range (0–60) and manual
+}
+input_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step1_rfdiffusion_m8/output/pdb"
+output_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step1_rfdiffusion_m8/1_cap_calculation"
 os.makedirs(output_folder, exist_ok=True)
 parameter_file = os.path.join(output_folder, "cap_parameters.txt")
 calculate_caps_parameters(input_folder, output_folder, parameter_file)
