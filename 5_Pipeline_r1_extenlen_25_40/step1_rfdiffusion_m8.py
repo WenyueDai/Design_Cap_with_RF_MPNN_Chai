@@ -6,18 +6,17 @@ import shutil
 import subprocess
 import os
 
-"""In this script use the pyrosetta converted protein structure for submission. The pyrosetta structure 
-has been tailored with specially positioned valine and glutamate, and we dont set up a chop, only extension.
-The RFdiffusion is coupled with block adjacent and secondary structure guidefold. The secondary structure
-is for extention there is 000033000033 repeat.
+"""
+- RFdiffusion with VE initial structure.
+- No chop, only extension
+- Block adjacent + secondary structure guidefold 000033000033
 """
 
 HPC_USER = "wd304@login-icelake.hpc.cam.ac.uk"
 REMOTE_DIR = "/rds/user/wd304/hpc-work/20241101_production"
 LOCAL_FILE_PATH = "/home/eva/0_bury_charged_pair/5_Pipeline/20241101_production"
 INPUT_PDB_SOURCE = "/home/eva/0_bury_charged_pair/5_Pipeline/input_pdb/3ult_cleaned_renumbered_monomer_VE.pdb"
-LEEWAY = 15 # How much residue is allow to interact with N/C cap (in contact map), and in inpaint
-HELIX_LENGTH = 4
+LEEWAY = 15 # How much residue is allow to interact with N/C cap (in contact map)
 GAP_LENGTH = 0
 
 # ----- Step 1: Setup search space -----
@@ -124,7 +123,7 @@ for _, df_row in df_limited.iterrows():
     get_scaffoldguided(df_row)
     write_task(df_row)
 
-# ----- Step 4: Generate SBATCH script locally -----
+# ----- Step 3: Generate SBATCH script locally -----
 # SBATCH header with the correct job array specification
 sbatch_header = f"""#!/bin/bash
 #SBATCH -J step1_rfdiffusion_matrix
@@ -171,7 +170,7 @@ with open(sbatch_file, "w") as file:
 
 print(f"SBATCH script '{sbatch_file}' has been created.")
 
-# ----- Step 5: Upload to the HPC -----
+# ----- Step 4: Upload to the HPC -----
 subprocess.run(f"scp -r {LOCAL_FILE_PATH} {HPC_USER}:{REMOTE_DIR}", shell=True)
 print(f"SLURM script copied to {REMOTE_DIR}.")
 
