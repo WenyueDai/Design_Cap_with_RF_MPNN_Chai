@@ -2,11 +2,18 @@
 
 This repository provides Python 3 scripts for designing capping motifs for beta-solenoid proteins using a pipeline of RFdiffusion, ProteinMPNN, and Chai-1.
 
-
+Designed N cap from top view:
 <img src="N_cap_top.png" alt="N_cap_top" width=250 height=200>
+
+Designed N cap from side view:
 <img src="N_cap_side.png" alt="N_cap_side" width=250 height=200>
+
+Designed C cap from top view:
 <img src="C_cap_top.png" alt="C_cap_top" width=250 height=200>
+
+Designed C cap from side view:
 <img src="C_cap_side.png" alt="C_cap_side" width=250 height=200>
+
 
 ### Workflow:
 1. **Structure Repacking**: The beta-solenoid structure (PDB: 3ult) is repacked with valine at the N- and C-termini and glutamate in the main body.
