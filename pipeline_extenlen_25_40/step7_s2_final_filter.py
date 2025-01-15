@@ -15,17 +15,22 @@ plt.rcParams.update({'font.size': 32})
 # Configuration
 cap_type = "C cap"  # Choose either "N cap" or "C cap"
 LEEWAY = 14
+# C cap: MIN_INTERFACE_BSA = 100  # Minimum Interface BSA to filter caps
 # N cap: MIN_INTERFACE_BSA = 100  # Minimum Interface BSA to filter caps
 MIN_INTERFACE_BSA = 100 
-# N cap: MIN_HELIX = 80 # Minimum helix percentage
+# C cap: MIN_HELIX = 40 # Minimum helix percentage
+# C cap: MIN_HELIX = 80 # Minimum helix percentage
 MIN_HELIX = 40
 
-# N cap: MIN_HBONDS = 5  # Minimum number of hydrogen bonds to keep the file
+# C cap: MIN_HBONDS = 4  # Minimum number of hydrogen bonds to keep the file
+# C cap: MIN_HBONDS = 5  # Minimum number of hydrogen bonds to keep the file
 MIN_HBONDS = 4
-# N cap: MIN_CLOSE_ATOMS = 150 # Minimum number of atom in close approxite to cap
+# C cap: MIN_CLOSE_ATOMS = 100 # Minimum number of atom in close approxite to cap
+# C cap: MIN_CLOSE_ATOMS = 150 # Minimum number of atom in close approxite to cap
 MIN_CLOSE_ATOMS = 100
 
-# N cap: MIN_HYDROPHOBIC_CONTACTS = 10  # Threshold for hydrophobic contacts
+# C cap: MIN_HYDROPHOBIC_CONTACTS = 8  # Threshold for hydrophobic contacts
+# N cap: MIN_HYDROPHOBIC_CONTACTS = 8  # Threshold for hydrophobic contacts
 MIN_HYDROPHOBIC_CONTACTS = 8
 
 DISTANCE_CUTOFF = 3.5  # Distance cutoff for hydrogen bonds in Å
@@ -33,7 +38,7 @@ ANGLE_CUTOFF = 135.0  # Angle cutoff for hydrogen bonds in degrees
 CLOSE_ATOM_DISTANCE = 4
 
 # Paths
-input_folder = "/home/eva/0_bury_charged_pair/5_Pipeline_r1_extenlen_25_40/step3_chai_m8/C_cap/analysis_localrmsd/top_files"
+input_folder = "/home/eva/0_pipeline_cap_design/pipeline_extenlen_25_40/step3_chai_m8/C_cap/analysis_localrmsd/top_files"
 output_folder = f"{input_folder}/final_filter"
 cpptraj_output_folder = f"{output_folder}/cpptraj_outputs"
 filter_folder = f"{output_folder}/final_filter_structure"
@@ -43,7 +48,6 @@ helix_percentage_file = f"{output_folder}/helix_percentage.png"
 scatter_plot_file = f"{output_folder}/scatter_plot.png"
 hbond_histogram_file = f"{output_folder}/hbond_histogram.png"
 close_atom_histogram_file = f"{output_folder}/close_atom_histogram.png"
-complementarity_histogram_file = f"{output_folder}/complementarity_histogram.png"
 
 # Ensure output folders exist
 os.makedirs(output_folder, exist_ok=True)
@@ -107,6 +111,32 @@ def parse_pdb_sequence(pdb_path, chain_id='A'):
     sequence_string = "".join(sequence.values())
     return len(sequence_string)
 
+
+# Define run cpptraj to calculate the hbond
+def run_cpptraj(input_commands, output_file):
+    cpptraj_input_file = "cpptraj_temp.in"
+    with open(cpptraj_input_file, "w", newline="\n") as file:
+        file.write("\n".join(input_commands))
+    try:
+        subprocess.run(["cpptraj", "-i", cpptraj_input_file], capture_output=True, text=True, check=True)
+        os.remove(cpptraj_input_file)  # Clean up temporary input file
+        
+        # Initialize hbond count by summing values from each frame in the output
+        hbond_count = 0
+        with open(output_file, "r") as output:
+            for line in output:
+                # Look for lines with data (e.g., "1           14")
+                match = re.search(r'^\s*\d+\s+(\d+)', line)
+                if match:
+                    hbond_count += int(match.group(1))  # Add the hydrogen bond count from this frame
+
+        return hbond_count
+    except Exception as e:
+        print(f"Error running cpptraj for: {e}")
+        if os.path.exists(cpptraj_input_file):
+            os.remove(cpptraj_input_file)  # Ensure temp file is deleted on error
+        return 0
+
 # 5. Function to calculate hydrogen bonds with cpptraj, including backbone-only calculation
 def calculate_hbonds_with_cpptraj(pdb_path):
     filename = os.path.basename(pdb_path)
@@ -122,30 +152,6 @@ def calculate_hbonds_with_cpptraj(pdb_path):
     else:
         print("Cap type not defined. Skipping hydrogen bond analysis.")
         return 0, 0, 0
-
-    def run_cpptraj(input_commands, output_file):
-        cpptraj_input_file = "cpptraj_temp.in"
-        with open(cpptraj_input_file, "w", newline="\n") as file:
-            file.write("\n".join(input_commands))
-        try:
-            subprocess.run(["cpptraj", "-i", cpptraj_input_file], capture_output=True, text=True, check=True)
-            os.remove(cpptraj_input_file)  # Clean up temporary input file
-            
-            # Initialize hbond count by summing values from each frame in the output
-            hbond_count = 0
-            with open(output_file, "r") as output:
-                for line in output:
-                    # Look for lines with data (e.g., "1           14")
-                    match = re.search(r'^\s*\d+\s+(\d+)', line)
-                    if match:
-                        hbond_count += int(match.group(1))  # Add the hydrogen bond count from this frame
-
-            return hbond_count
-        except Exception as e:
-            print(f"Error running cpptraj for {pdb_path}: {e}")
-            if os.path.exists(cpptraj_input_file):
-                os.remove(cpptraj_input_file)  # Ensure temp file is deleted on error
-            return 0
 
     # Define output files for each type of hydrogen bond calculation
     combined_output = f"{cpptraj_output_folder}/{filename}_combined_hbonds.dat"
@@ -324,7 +330,7 @@ def filter_and_copy_pdbs(pdb_files):
             cap_bsa, body_bsa, bsa, helix_percentage
         ])
         
-        # Filtering criteria based on hydrogen bonds, close atoms, and interface BSA/complementarity
+        # Filtering criteria based on hydrogen bonds, close atoms, and interface BSA
         if non_mainchain_hbonds >= MIN_HBONDS and num_close_atoms >= MIN_CLOSE_ATOMS and \
            bsa >= MIN_INTERFACE_BSA and helix_percentage >= MIN_HELIX:
             shutil.copy(pdb_path, f"{filter_folder}")

@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from MDAnalysis import Universe
 from MDAnalysis.analysis import rms
-import warnings
-import Bio.PDB
 from scipy.stats import gaussian_kde
 
 """
