@@ -7,7 +7,6 @@ from MDAnalysis.analysis import rms
 from MDAnalysis.exceptions import SelectionError
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
 # conda activate AmberTools23
 
