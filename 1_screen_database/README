@@ -1,0 +1,12 @@
+1. First, screen in repeatDB database to find out if there is any solenoid that contains a opposite
+charged residue buried inside protein (SASA<1, distance between two charged residue<10)
+
+2. If I can find such solenoid, observe what is the properties that allow them bury such residues
+
+3. Extract the property and build new solenoid mainbody using RFdiffusion harboring the property.
+
+4. Use pyrosetta to repack the first and last 10 residue into Valine.
+
+5. Use RFdiffusion to generate the capping structure.
+
+6. ProteinMPNN to keep the charged motif unmove but the surrounding residue change.

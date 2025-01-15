@@ -1,0 +1,21 @@
+RFdiffusion_playground
+1. In the past I tried to use RFdiffusion to generate the capping sequence for solenoid. And that is a very interesting topic to write on.
+
+Method 1. Default input
+When I simply use the default version of RFdiffusion, etc. contig map 20-40/A10-110/20-40, the shape of the cap was wildly distributed from beta to helix, from aligning with the main body to wildly shaped to be somewhere else. I tried to add a second step of filtering the solenoid based on:
+1. If the capping is similar to the main body. If so, discard it. That is done by extracting the capping motif and the main body motif that has the same number of capping region. If it is very similar to each other, that would mean that RFdiffusion is likely just extending the beta solenoid structure. I also extracted the center of mass of the capping region, and center of mass of the main body region of two part called N extension and C extension. Draw a line in between the N extension and C extension as the body line. Draw a line between N cap and N extention; A line between C cap and C extention. Calculate the angle between body line and Ccap-extention line. I also calculate the distance between the center of mass between cap region and the main body line. However, the biggest drawback is 1. It filtered out too much structure to make me think that it is a waste of computer resources. 2. Even if the capping motif can satisfy the abovementioned cristeria doesnt mean it has a good coverage to the N extention and C extension region. Furthermore, the N and C cap are mostly beta strand or loop, which makes me think that it is the extention from the main body.
+
+Method 2. Psedo helix + partial diffusion
+If from the first experiment, one conclusion can be get, is that RFdiffusoin like to extension from previous defined secoindary structure. Then I am thinking what if I provide it a fake secondary structure, would it more likely to forming diffusion motif based on that? So what I do is to place a psedo helix at the N and C terminus and only pick up three residues to provide to RFdiffusion. So that RFdiffusion know it is a helix region and will hopefully generate a helix motif to cover it. This process works well. But the drawback is the the capping region it designed are highly similar. Remembering that WE ACTUALLY DONT KNOW WHAT IS THE BEST CAP SHAPE, so that is very much a limit. Hence I do another round of partial diffusion which take the input of structure motif and paritial diffuse it, so the structure difference is not different much from the starting structure but it still has some diversity. This process can work, but it is quite tedious since it is a two step procedure.
+
+Method 3. Inpaint + adjacent block matrix + scaffoldguide with secondary structure.
+What inpaint do is it can mask some region of the protein. Adjacent block matrix xxx can be used to provide a contact map as a way to guide how do you want newly generated motif to interact with which part of protein. The scaffoldguide with secondary structure can provide a very general guidance on what secondary structure you want to use as extension. The script is a bit of complicated to write. But the output is pretty nice.
+
+Method 4. Fake valine covering.
+Since RFdiffusion's diffused structure can be influenced by the neibouring resdues, one method is to make the residues at the N and C terminal into valine and the residues outside the N and C terimus into glutamate. Since valine should have a tendency of being covered inside the protein core, so when you generating the extension as N cap and C cap, they are more prone to directly interacting with the N and C terminus valine. 
+
+Method 5. Fake valien covering + adjacent block matrix + scaffoldguide
+The inpaint dont looks very well, and simply use the fake valine covering give too much unwanted secondary structure.
+So I am thinking to combine the fake valine with the guide of secondary structure and contact map
+
+To confirm that there is indeed an effect based on the setting, I test m1, m3, m4, and m5 with the same setting of extension length etc
