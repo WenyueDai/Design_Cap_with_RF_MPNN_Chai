@@ -1,12 +1,8 @@
 import os
 import subprocess
-from pathlib import Path
 from datetime import datetime
 from Bio import SeqIO
 import matplotlib
-import re
-import shutil
-import numpy as np
 
 matplotlib.use('Agg')
 
